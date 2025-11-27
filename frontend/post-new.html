@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>New Post</title>
+  </head>
+  <body>
+    <h1>New Post</h1>
+
+    <form id="postForm">
+      <textarea name="text" rows="4" cols="40" required></textarea><br />
+      <button type="submit">Create</button>
+    </form>
+
+    <p id="error" style="color: red"></p>
+    <p><a href="/posts.html">Back to list</a></p>
+
+    <script type="module">
+      import { apiRequest, requireAuth } from "./api.js";
+
+      requireAuth();
+
+      const form = document.getElementById("postForm");
+      const errorEl = document.getElementById("error");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.textContent = "";
+
+        const text = new FormData(form).get("text");
+
+        try {
+          await apiRequest("/post", {
+            method: "POST",
+            body: JSON.stringify({ text }),
+          });
+          window.location.href = "/posts.html";
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      });
+    </script>
+  </body>
+</html>

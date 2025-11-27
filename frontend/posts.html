@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Posts</title>
+  </head>
+  <body>
+    <h1>Posts</h1>
+
+    <div>
+      Logged in as: <span id="me"></span>
+      <button id="newPostBtn">New Post</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <form id="searchForm">
+      <input name="userid" placeholder="Search by userid" />
+      <button type="submit">Search</button>
+    </form>
+
+    <ul id="postList"></ul>
+
+    <p id="error" style="color: red"></p>
+
+    <script type="module">
+      import { apiRequest, requireAuth, getUserid, clearAuth } from "./api.js";
+
+      requireAuth();
+
+      const meEl = document.getElementById("me");
+      const listEl = document.getElementById("postList");
+      const searchForm = document.getElementById("searchForm");
+      const errorEl = document.getElementById("error");
+
+      meEl.textContent = getUserid() || "(unknown)";
+
+      async function loadPosts(userid) {
+        errorEl.textContent = "";
+        listEl.innerHTML = "Loading...";
+
+        let path = "/post";
+        if (userid) {
+          path += `?userid=${encodeURIComponent(userid)}`;
+        }
+
+        try {
+          const posts = await apiRequest(path);
+
+          if (!posts || posts.length === 0) {
+            listEl.innerHTML = "<li>No posts</li>";
+            return;
+          }
+
+          listEl.innerHTML = "";
+          posts.forEach((p) => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+            <a href="/post-detail.html?id=${p.id}">
+              <strong>${p.name || ""}</strong> (@${p.userid})<br/>
+              ${p.text}
+            </a>
+          `;
+            listEl.appendChild(li);
+          });
+        } catch (err) {
+          errorEl.textContent = err.message;
+          listEl.innerHTML = "";
+        }
+      }
+
+      searchForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const userid = new FormData(searchForm).get("userid");
+        loadPosts(userid || undefined);
+      });
+
+      document.getElementById("newPostBtn").onclick = () => {
+        window.location.href = "/post-new.html";
+      };
+
+      document.getElementById("logoutBtn").onclick = () => {
+        clearAuth();
+        window.location.href = "/login.html";
+      };
+
+      loadPosts();
+    </script>
+  </body>
+</html>

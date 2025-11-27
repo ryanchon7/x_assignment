@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Post Detail</title>
+  </head>
+  <body>
+    <h1>Post Detail</h1>
+
+    <div id="post"></div>
+
+    <button id="editBtn">Edit</button>
+    <button id="deleteBtn">Delete</button>
+    <button onclick="window.location.href='/posts.html'">Back</button>
+
+    <p id="error" style="color: red"></p>
+
+    <script type="module">
+      import { apiRequest, requireAuth } from "./api.js";
+
+      requireAuth();
+
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+
+      const postEl = document.getElementById("post");
+      const errorEl = document.getElementById("error");
+      const editBtn = document.getElementById("editBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+
+      async function loadPost() {
+        try {
+          const post = await apiRequest(`/post/${id}`);
+          postEl.innerHTML = `
+          <p><strong>${post.name || ""}</strong> (@${post.userid})</p>
+          <p>${post.text}</p>
+          <p>${new Date(post.createdAt).toLocaleString()}</p>
+        `;
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      }
+
+      editBtn.onclick = () => {
+        window.location.href = `/post-edit.html?id=${id}`;
+      };
+
+      deleteBtn.onclick = async () => {
+        if (!confirm("Delete this post?")) return;
+        try {
+          await apiRequest(`/post/${id}`, { method: "DELETE" });
+          window.location.href = "/posts.html";
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      };
+
+      loadPost();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edit Post</title>
+  </head>
+  <body>
+    <h1>Edit Post</h1>
+
+    <form id="editForm">
+      <textarea name="text" rows="4" cols="40" required></textarea><br />
+      <button type="submit">Save</button>
+    </form>
+
+    <p id="error" style="color: red"></p>
+    <p><a href="/posts.html">Back to list</a></p>
+
+    <script type="module">
+      import { apiRequest, requireAuth } from "./api.js";
+
+      requireAuth();
+
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const form = document.getElementById("editForm");
+      const textarea = form.querySelector("textarea");
+      const errorEl = document.getElementById("error");
+
+      async function loadPost() {
+        try {
+          const post = await apiRequest(`/post/${id}`);
+          textarea.value = post.text;
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.textContent = "";
+
+        const text = new FormData(form).get("text");
+
+        try {
+          await apiRequest(`/post/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({ text }),
+          });
+          window.location.href = `/post-detail.html?id=${id}`;
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      });
+
+      loadPost();
+    </script>
+  </body>
+</html>

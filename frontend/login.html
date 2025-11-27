@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login</title>
+  </head>
+  <body>
+    <h1>Login</h1>
+
+    <form id="loginForm">
+      <div>
+        <label>User ID</label>
+        <input name="userid" required />
+      </div>
+      <div>
+        <label>Password</label>
+        <input name="password" type="password" required />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+
+    <p><a href="signup.html">Go to Sign Up</a></p>
+    <p id="error" style="color: red"></p>
+
+    <script type="module">
+      import { apiRequest, saveAuth } from "./api.js";
+
+      const form = document.getElementById("loginForm");
+      const errorEl = document.getElementById("error");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorEl.textContent = "";
+
+        const fd = new FormData(form);
+        const userid = fd.get("userid");
+        const password = fd.get("password");
+
+        try {
+          const { token, user } = await apiRequest("/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ userid, password }),
+          });
+          saveAuth(token, user.userid);
+          window.location.href = "/posts.html";
+        } catch (err) {
+          errorEl.textContent = err.message;
+        }
+      });
+    </script>
+  </body>
+</html>
